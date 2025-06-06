@@ -3,44 +3,25 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PhotoGallery from './PhotoGallery';
-import AdminPanel from './AdminPanel';
-import { Heart, Star, Gift } from 'lucide-react';
-
-interface PhotoData {
-  id: string;
-  year: number;
-  url: string;
-  caption?: string;
-}
+import { Heart, Star, Gift, Info } from 'lucide-react';
+import { photosByYear, PhotoData } from '@/data/photos';
 
 const BirthdayWebsite = () => {
-  const [photos, setPhotos] = useState<PhotoData[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [showAdmin, setShowAdmin] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
-    // Load photos from localStorage
-    const savedPhotos = localStorage.getItem('riuBirthdayPhotos');
-    if (savedPhotos) {
-      setPhotos(JSON.parse(savedPhotos));
-    }
-
     // Trigger entrance animation
     setIsVisible(true);
   }, []);
 
-  const savePhotos = (newPhotos: PhotoData[]) => {
-    setPhotos(newPhotos);
-    localStorage.setItem('riuBirthdayPhotos', JSON.stringify(newPhotos));
-  };
-
   const getAvailableYears = () => {
-    const years = [...new Set(photos.map(photo => photo.year))].sort((a, b) => b - a);
+    const years = [...new Set(photosByYear.map(photo => photo.year))].sort((a, b) => b - a);
     return years.length > 0 ? years : [new Date().getFullYear()];
   };
 
-  const filteredPhotos = photos.filter(photo => photo.year === selectedYear);
+  const filteredPhotos = photosByYear.filter(photo => photo.year === selectedYear);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-purple-50 relative overflow-hidden">
@@ -102,25 +83,60 @@ const BirthdayWebsite = () => {
         {/* Photo Gallery */}
         <PhotoGallery photos={filteredPhotos} year={selectedYear} />
 
-        {/* Admin Button */}
+        {/* Info Button */}
         <div className="fixed bottom-6 right-6">
           <Button
-            onClick={() => setShowAdmin(!showAdmin)}
+            onClick={() => setShowInfo(!showInfo)}
             className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-full p-4"
           >
-            {showAdmin ? 'Close Admin' : 'Add Photos'}
+            <Info className="mr-2" size={20} />
+            How to Add Photos
           </Button>
         </div>
 
-        {/* Admin Panel */}
-        {showAdmin && (
+        {/* Info Panel */}
+        {showInfo && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-auto">
-              <AdminPanel
-                photos={photos}
-                onSavePhotos={savePhotos}
-                onClose={() => setShowAdmin(false)}
-              />
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-rose-700">How to Add Photos</h2>
+                <Button onClick={() => setShowInfo(false)} variant="outline" size="icon">
+                  <Heart />
+                </Button>
+              </div>
+              
+              <div className="space-y-4 text-gray-700">
+                <div>
+                  <h3 className="font-semibold text-rose-600 mb-2">📁 Folder Structure:</h3>
+                  <div className="bg-gray-100 p-3 rounded text-sm font-mono">
+                    public/photos/<br/>
+                    ├── 2023/<br/>
+                    │   ├── photo1.jpg<br/>
+                    │   └── photo2.jpg<br/>
+                    ├── 2024/<br/>
+                    │   ├── photo1.jpg<br/>
+                    │   └── photo2.jpg<br/>
+                    └── 2025/<br/>
+                        └── photo1.jpg
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-rose-600 mb-2">⚙️ How to Add:</h3>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>Create year folders in <code>public/photos/</code></li>
+                    <li>Add your photos to the year folders</li>
+                    <li>Edit <code>src/data/photos.ts</code> to register the photos</li>
+                    <li>Redeploy to Cloudflare Pages</li>
+                  </ol>
+                </div>
+                
+                <div className="bg-pink-50 p-3 rounded">
+                  <p className="text-sm text-rose-700">
+                    💡 <strong>Tip:</strong> Photos will be visible to everyone who visits the site once deployed!
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
